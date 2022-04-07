@@ -38,27 +38,44 @@ class PathfindingBase:
 
 
 class AstarNode:
-    def __init__(self, x: int, y: int, cost: Optional[int], is_passable=True) -> None:
+    def __init__(self, x: int, y: int, cost: Optional[int]) -> None:
         self.x = x
         self.y = y
         self.cost = cost
-        self.is_passable = is_passable
+        self.is_passable = cost is not None
         self.prev = None
         self.start_dist = 0
         self.end_dist = 0
 
     def f(self) -> float:
         return self.start_dist + self.end_dist
-
-    def to_coord_list(self) -> List:
-        return [self.x, self.y]
-
-    def __repr__(self) -> str:
-        return str(self.to_coord_list())
+      
+    def to_coord_list(self) -> Tuple[int, int]:
+        return (self.x, self.y)
 
 
 class Astar(PathfindingBase):
+    '''
+        A class to represent the Astar pathfinder class
+
+        Methods
+            find_path(start, end):
+                Finds and returns the shortest path from start to end
+
+    '''
+
     def __init__(self, input_map: List[List[Optional[int]]]) -> None:
+        '''
+        Initializes the Astar pathfinder class
+
+            Parameters:
+                input_map (List[List[Optional[int]]]): Input map of integers, each integer represents the cost of the node
+                    at location of x, y. None represents a wall
+
+            Returns:
+                None
+
+        '''
         super().__init__(input_map)
 
         self.open_list: List = []
@@ -67,12 +84,22 @@ class Astar(PathfindingBase):
         for x in range(self.width):
             self.grid.append([])
             for y in range(self.height):
-                #cost = input_map[x][y]
                 cost = input_map[x][y]
-                node = AstarNode(x, y, cost, cost is not None)
+                node = AstarNode(x, y, cost)
                 self.grid[x].append(node)
 
     def find_path(self, start: Tuple[int, int], end: Tuple[int, int]) -> List:
+        '''
+        Finds and returns the shortest path from start to end
+
+            Parameters:
+                start (Tuple[int, int]): Coordinates of the start node
+                end (Tuple[int, int]): Coordinates of the end node
+
+            Returns:
+                path (List[Tuple[int, int]]): List of Tuples of coordinates of the shortest path from start to end
+
+        '''
         self.open_list = []
         self.closed_list = []
 
@@ -115,23 +142,40 @@ class Astar(PathfindingBase):
 
 
 class DijkstraNode:
-    def __init__(self, x: int, y: int, cost: Optional[int], tentative_distance, is_passable) -> None:
+    def __init__(self, x: int, y: int, cost: Optional[int], tentative_distance=float("inf")) -> None:
         self.x = x
         self.y = y
         self.tentative_distance = tentative_distance
         self.cost = cost
-        self.is_passable = is_passable
+        self.is_passable = cost is not None
         self.prev = None
 
-    def to_coord_list(self) -> List:
-        return [self.x, self.y]
-
-    def __repr__(self) -> str:
-        return str(self.to_coord_list())
+    def to_coord_list(self) -> Tuple[int, int]:
+        return (self.x, self.y)
 
 
 class Dijkstra(PathfindingBase):
+    '''
+        A class to represent the Dijkstra pathfinder class
+
+        Methods
+            find_path(start, end):
+                Finds and returns the shortest path from start to end
+
+    '''
+
     def __init__(self, input_map: List[List[Optional[int]]]) -> None:
+        '''
+        Initializes the Dijkstra pathfinder class
+
+            Parameters:
+                input_map (List[List[Optional[int]]]): Input map of integers, each integer represents the cost of the node
+                    at location of x, y. None represents a wall
+
+            Returns:
+                None
+
+        '''
         super().__init__(input_map)
 
         self.unvisited: List = []
@@ -141,7 +185,7 @@ class Dijkstra(PathfindingBase):
             self.grid.append([])
             for y in range(self.height):
                 cost = input_map[x][y]
-                node = DijkstraNode(x, y, cost, float("inf"), cost is not None)
+                node = DijkstraNode(x, y, cost)
                 self.grid[x].append(node)
 
     def init_unvisited(self):
@@ -152,6 +196,17 @@ class Dijkstra(PathfindingBase):
                     self.unvisited.append(self.grid[x][y])
 
     def find_path(self, start: Tuple[int, int], end: Tuple[int, int]) -> List:
+        '''
+        Finds and returns the shortest path from start to end
+
+            Parameters:
+                start (Tuple[int, int]): Coordinates of the start node
+                end (Tuple[int, int]): Coordinates of the end node
+
+            Returns:
+                path (List[Tuple[int, int]]): List of Tuples of coordinates of the shortest path from start to end
+
+        '''
         self.init_unvisited()
 
         initial_node = self.grid[start[0]][start[1]]
@@ -166,12 +221,6 @@ class Dijkstra(PathfindingBase):
 
             current_node = self.unvisited.pop()
 
-            for adjacent_node in self.get_adjacent(current_node):
-                distance = current_node.tentative_distance + current_node.cost
-                if distance < adjacent_node.tentative_distance:
-                    adjacent_node.tentative_distance = distance
-                    adjacent_node.prev = current_node
-
             if current_node is end_node:
                 path = []
                 while current_node:
@@ -179,6 +228,12 @@ class Dijkstra(PathfindingBase):
                     current_node = current_node.prev
                 path.reverse()
                 return path
+
+            for adjacent_node in self.get_adjacent(current_node):
+                distance = current_node.tentative_distance + current_node.cost
+                if distance < adjacent_node.tentative_distance:
+                    adjacent_node.tentative_distance = distance
+                    adjacent_node.prev = current_node
 
         return []
 
@@ -190,15 +245,32 @@ class BreadthNode:
         self.is_passable = is_passable
         self.prev = None
 
-    def to_coord_list(self) -> List:
-        return [self.x, self.y]
-
-    def __repr__(self) -> str:
-        return str(self.to_coord_list())
+    def to_coord_list(self) -> Tuple[int, int]:
+        return (self.x, self.y)
 
 
 class BreadthFirst(PathfindingBase):
+    '''
+        A class to represent the BreadthFirst pathfinder class
+
+        Methods
+            find_path(start, end):
+                Finds and returns a path from start to end
+
+    '''
+
     def __init__(self, input_map: List[List[Optional[int]]]) -> None:
+        '''
+        Initializes the BreadthFirst pathfinder class
+
+            Parameters:
+                input_map (List[List[Optional[int]]]): Input map of integers, each integer represents the cost of the node
+                    at location of x, y. None represents a wall
+
+            Returns:
+                None
+
+        '''
         super().__init__(input_map)
 
         self.grid = []
@@ -210,6 +282,17 @@ class BreadthFirst(PathfindingBase):
                 self.grid[x].append(node)
 
     def find_path(self, start: Tuple[int, int], end: Tuple[int, int]) -> List:
+        '''
+        Finds and returns path from start to end
+
+            Parameters:
+                start (Tuple[int, int]): Coordinates of the start node
+                end (Tuple[int, int]): Coordinates of the end node
+
+            Returns:
+                path (List[Tuple[int, int]]): List of Tuples of coordinates of a path from start to end
+
+        '''
         if start == end:
             return [start]
 
