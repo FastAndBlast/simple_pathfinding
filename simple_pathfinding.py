@@ -1,21 +1,20 @@
 import math
-from typing import List, Optional
+from typing import List, Tuple, Optional
 
 
-class pathfinding_base:
+class PathfindingBase:
     def __init__(self, input_map: List[List[Optional[int]]]) -> None:
-        self.width = 0
-        self.height = len(input_map)
+        self.height = 0
+        self.width = len(input_map)
 
-        if self.height > 0:
-            self.width = len(input_map[0])
-        else:
-            return
+        if self.width > 0:
+            self.height = len(input_map[0])
 
-        self.closed_list = []
+        self.closed_list: List = []
+        self.grid: List = []
 
-    def valid_adjacent(self, x, y):
-        return self.grid[x][y].passable and not self.grid[x][y] in self.closed_list
+    def valid_adjacent(self, x: int, y: int) -> bool:
+        return self.grid[x][y].is_passable and not self.grid[x][y] in self.closed_list
 
     def get_adjacent(self, node) -> List:
         adjacent_list = []
@@ -34,22 +33,22 @@ class pathfinding_base:
     def distance(self, start, end) -> float:
         return math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2)
 
-    def get_path(self, start, end) -> List[int]:
-        pass
+    def find_path(self, start: Tuple[int, int], end: Tuple[int, int]) -> List[int]:
+        raise Exception("Find path not implemented")
 
 
-class astar_node:
-    def __init__(self, x: int, y: int, cost: Optional[int]) -> None:
+class AstarNode:
+    def __init__(self, x: int, y: int, cost: Optional[int], is_passable=True) -> None:
         self.x = x
         self.y = y
         self.cost = cost
-        self.passable = True
+        self.is_passable = is_passable
         self.prev = None
-        self.g = 0
-        self.h = 0
+        self.start_dist = 0
+        self.end_dist = 0
 
     def f(self) -> float:
-        return self.g + self.h
+        return self.start_dist + self.end_dist
 
     def to_coord_list(self) -> List:
         return [self.x, self.y]
@@ -58,68 +57,70 @@ class astar_node:
         return str(self.to_coord_list())
 
 
-class astar(pathfinding_base):
+class Astar(PathfindingBase):
     def __init__(self, input_map: List[List[Optional[int]]]) -> None:
-        self.open_list = []
-
         super().__init__(input_map)
+
+        self.open_list: List = []
 
         self.grid = []
         for x in range(self.width):
             self.grid.append([])
             for y in range(self.height):
-                node = astar_node(x, y, input_map[self.height - y - 1][x])
-                if input_map[self.height - y - 1][x] == None:
-                    node.passable = False
+                #cost = input_map[x][y]
+                cost = input_map[x][y]
+                node = AstarNode(x, y, cost, cost is not None)
                 self.grid[x].append(node)
 
-    def get_path(self, start: List[int], end: List[int]) -> List:
+    def find_path(self, start: Tuple[int, int], end: Tuple[int, int]) -> List:
         self.open_list = []
         self.closed_list = []
 
         start_node = self.grid[start[0]][start[1]]
         end_node = self.grid[end[0]][end[1]]
 
-        start_node.h = self.distance(start_node, end_node)
+        start_node.end_dist = self.distance(start_node, end_node)
 
         self.open_list.append(start_node)
 
-        while self.open_list != []:
-            node = self.open_list.pop(0)
+        while self.open_list:
+            node = self.open_list.pop()
 
             if node is end_node:
                 path = []
                 while node:
-                    path.insert(0, node.to_coord_list())
+                    path.append(node.to_coord_list())
                     node = node.prev
+                path.reverse()
                 return path
 
             self.closed_list.append(node)
 
             for adjacent_node in self.get_adjacent(node):
                 if adjacent_node in self.open_list:
-                    if node.g + node.cost < adjacent_node.g:
+                    if node.start_dist + node.cost < adjacent_node.start_dist:
                         adjacent_node.prev = node
-                        adjacent_node.g = node.g + node.cost
+                        adjacent_node.start_dist = node.start_dist + node.cost
                 else:
                     adjacent_node.prev = node
-                    adjacent_node.g = node.g + node.cost
-                    adjacent_node.h = self.distance(adjacent_node, end_node)
+                    adjacent_node.start_dist = node.start_dist + node.cost
+                    adjacent_node.end_dist = self.distance(
+                        adjacent_node, end_node)
                     self.open_list.append(adjacent_node)
 
             self.open_list = sorted(
-                self.open_list, key=lambda x: x.f(), reverse=True)
+                self.open_list, key=lambda x: x.f())
 
         return []
 
 
-class dijkstra_node:
-    def __init__(self, x: int, y: int, cost: Optional[int], tentative_distance=float("inf")) -> None:
+class DijkstraNode:
+    def __init__(self, x: int, y: int, cost: Optional[int], tentative_distance, is_passable) -> None:
         self.x = x
         self.y = y
         self.tentative_distance = tentative_distance
         self.cost = cost
-        self.passable = True
+        self.is_passable = is_passable
         self.prev = None
 
     def to_coord_list(self) -> List:
@@ -129,43 +130,41 @@ class dijkstra_node:
         return str(self.to_coord_list())
 
 
-class dijkstra(pathfinding_base):
+class Dijkstra(PathfindingBase):
     def __init__(self, input_map: List[List[Optional[int]]]) -> None:
-        self.unvisited = []
-
         super().__init__(input_map)
+
+        self.unvisited: List = []
 
         self.grid = []
         for x in range(self.width):
             self.grid.append([])
             for y in range(self.height):
-                node = dijkstra_node(x, y, input_map[self.height - y - 1][x])
-                if input_map[self.height - y - 1][x] == None:
-                    node.passable = False
-                else:
-                    self.unvisited.append(node)
+                cost = input_map[x][y]
+                node = DijkstraNode(x, y, cost, float("inf"), cost is not None)
                 self.grid[x].append(node)
 
-    def set_unvisited(self):
-        unvisited = []
+    def init_unvisited(self):
+        self.unvisited = []
         for x in range(self.width):
             for y in range(self.height):
-                if self.grid[x][y].passable:
-                    unvisited.append(self.grid[x][y])
+                if self.grid[x][y].is_passable:
+                    self.unvisited.append(self.grid[x][y])
 
-    def get_path(self, start: List[int], end: List[int]) -> List:
-        self.set_unvisited()
+    def find_path(self, start: Tuple[int, int], end: Tuple[int, int]) -> List:
+        self.init_unvisited()
 
         initial_node = self.grid[start[0]][start[1]]
         initial_node.tentative_distance = 0
+        end_node = self.grid[end[0]][end[1]]
 
         current_node = None
 
-        while self.unvisited != []:
+        while self.unvisited:
             self.unvisited = sorted(
-                self.unvisited, key=lambda x: x.tentative_distance)
+                self.unvisited, key=lambda x: x.tentative_distance, reverse=True)
 
-            current_node = self.unvisited[0]
+            current_node = self.unvisited.pop()
 
             for adjacent_node in self.get_adjacent(current_node):
                 distance = current_node.tentative_distance + current_node.cost
@@ -173,24 +172,22 @@ class dijkstra(pathfinding_base):
                     adjacent_node.tentative_distance = distance
                     adjacent_node.prev = current_node
 
-            if current_node in self.unvisited:
-                self.unvisited.remove(current_node)
-
-            if current_node == self.grid[end[0]][end[1]]:
+            if current_node is end_node:
                 path = []
                 while current_node:
-                    path.insert(0, current_node.to_coord_list())
+                    path.append(current_node.to_coord_list())
                     current_node = current_node.prev
+                path.reverse()
                 return path
 
         return []
 
 
-class breadth_node:
-    def __init__(self, x: int, y: int) -> None:
+class BreadthNode:
+    def __init__(self, x: int, y: int, is_passable=True) -> None:
         self.x = x
         self.y = y
-        self.passable = True
+        self.is_passable = is_passable
         self.prev = None
 
     def to_coord_list(self) -> List:
@@ -200,7 +197,7 @@ class breadth_node:
         return str(self.to_coord_list())
 
 
-class breadth_first(pathfinding_base):
+class BreadthFirst(PathfindingBase):
     def __init__(self, input_map: List[List[Optional[int]]]) -> None:
         super().__init__(input_map)
 
@@ -208,33 +205,34 @@ class breadth_first(pathfinding_base):
         for x in range(self.width):
             self.grid.append([])
             for y in range(self.height):
-                node = breadth_node(x, y)
-                if input_map[self.height - y - 1][x] == None:
-                    node.passable = False
+                cost = input_map[x][y]
+                node = BreadthNode(x, y, cost is not None)
                 self.grid[x].append(node)
 
-    def get_path(self, start: List[int], end: List[int]) -> List:
+    def find_path(self, start: Tuple[int, int], end: Tuple[int, int]) -> List:
         if start == end:
             return [start]
 
         initial_node = self.grid[start[0]][start[1]]
+        end_node = self.grid[end[0]][end[1]]
 
         self.closed_list = [initial_node]
 
         queue = [initial_node]
 
-        while queue != []:
+        while queue:
             current_node = queue.pop(0)
 
             adjacent_list = self.get_adjacent(current_node)
 
             for adjacent_node in adjacent_list:
                 adjacent_node.prev = current_node
-                if adjacent_node == self.grid[end[0]][end[1]]:
+                if adjacent_node is end_node:
                     path = []
                     while adjacent_node:
-                        path.insert(0, adjacent_node.to_coord_list())
+                        path.append(adjacent_node.to_coord_list())
                         adjacent_node = adjacent_node.prev
+                    path.reverse()
                     return path
 
                 queue.append(adjacent_node)

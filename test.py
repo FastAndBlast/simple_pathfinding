@@ -1,65 +1,64 @@
-from pathfinding import *
+import simple_pathfinding
+from typing import List
 
+E = 0
+X = None
 
-test1 = [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [9, 9, 9, 9, 9],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
+DUMP_VISUAL_PATHS = True
+
+TEST_MAP1 = [
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [X, X, X, X, X],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
 ]
 
-test2 = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+TEST_MAP2 = [
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
+    [E, E, E, E, E, E, E, E, E, E],
 ]
 
-test3 = [
-    [0, 0, 9, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 9, 0, 9, 9, 9, 9, 9, 9],
-    [0, 0, 9, 0, 9, 0, 0, 0, 0, 0],
-    [0, 0, 9, 0, 9, 0, 9, 9, 9, 0],
-    [0, 0, 9, 0, 9, 0, 0, 0, 9, 0],
-    [0, 0, 9, 0, 9, 9, 9, 0, 9, 0],
-    [0, 0, 9, 0, 0, 0, 9, 0, 9, 0],
-    [0, 0, 9, 0, 0, 0, 0, 0, 9, 0],
-    [0, 0, 9, 9, 9, 9, 9, 9, 9, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+TEST_MAP3 = [
+    [E, E, X, E, E, E, E, E, E, E],
+    [E, E, X, E, X, X, X, X, X, X],
+    [E, E, X, E, X, E, E, E, E, E],
+    [E, E, X, E, X, E, X, X, X, E],
+    [E, E, X, E, X, E, E, E, X, E],
+    [E, E, X, E, X, X, X, E, X, E],
+    [E, E, X, E, E, E, X, E, X, E],
+    [E, E, X, E, E, E, E, E, X, E],
+    [E, E, X, X, X, X, X, X, X, E],
+    [E, E, E, E, E, E, E, E, E, E],
 ]
 
-test4 = [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
+TEST_MAP4 = [
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
+    [E, E, E, E, E],
 ]
 
-tests = [test1, test2, test3, test4]
-
-for test in tests:
-    for x in range(len(test)):
-        for y in range(len(test[0])):
-            if test[x][y] == 9:
-                test[x][y] = None
+TEST_MAPS = [TEST_MAP1, TEST_MAP2, TEST_MAP3, TEST_MAP4]
 
 
 def visualize_path(path, map, start, end) -> str:
@@ -77,9 +76,9 @@ def visualize_path(path, map, start, end) -> str:
             elif [x, y] == end:
                 result += 'E'
             elif [x, y] in path:
-                result += '1'
+                result += '■'
             elif map[height - y - 1][x] == None:
-                result += '#'
+                result += 'X'
             else:
                 result += '0'
 
@@ -88,31 +87,66 @@ def visualize_path(path, map, start, end) -> str:
     return result
 
 
-def main():
-    i = 1
-    for test in tests:
-        a = astar(test)
+def transpose(map: List[List[int]]) -> List[List[int]]:
+    height = len(map)
+    width = len(map[0])
+
+    new_map: List[List[int]] = []
+
+    for x in range(width):
+        new_map.append([])
+        for y in range(height):
+            new_map[x].append(map[height - y - 1][x])
+
+    return new_map
+
+
+def get_path_cost(path, map) -> int:
+    cost_sum = 0
+    for coord in path:
+        if map[coord[0]][coord[1]] != None:
+            cost_sum += map[coord[0]][coord[1]]
+
+    return cost_sum
+
+
+def test_function(func):
+    for i, test_map in enumerate(TEST_MAPS):
+        transposed_map = transpose(test_map)
+        a = func(transposed_map)
 
         start = [0, 0]
-        end = [len(test[0]) - 1, len(test) - 1]
+        end = [len(transposed_map) - 1, len(transposed_map[0]) - 1]
 
-        # print(a)
-        print("Test #" + str(i))  # + " | " + a.name)
+        print("|-----Test #" + str(i + 1) + "-----")
         print("Start: " + str(start) + " | End: " + str(end))
 
-        path = a.get_path(start, end)
+        path = a.find_path(start, end)
 
-        print("Path: " + str(path))
+        print("Length: " + str(len(path) - 1) +
+              " | Cost: " + str(get_path_cost(path, transposed_map)))
 
-        result = visualize_path(path, test, start, end)
+        if DUMP_VISUAL_PATHS:
+            if path:
+                print("Path: " + str(path))
+                result = visualize_path(path, test_map, start, end)
+                print(result)
+            else:
+                print("Path: Does not exist\n")
 
-        print(result)
 
-        print("-----------")
+def main():
+    print("|----------ASTAR----------|")
+    test_function(simple_pathfinding.Astar)
 
-        i += 1
+    print("|----------DIJKSTRA----------|")
+    test_function(simple_pathfinding.Dijkstra)
+
+    print("|----------BREADTH FIRST----------|")
+    test_function(simple_pathfinding.BreadthFirst)
 
     return 0
 
 
-main()
+if __name__ == "__main__":
+    main()
