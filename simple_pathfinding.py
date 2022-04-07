@@ -49,7 +49,7 @@ class AstarNode:
 
     def f(self) -> float:
         return self.start_dist + self.end_dist
-
+      
     def to_coord_list(self) -> Tuple[int, int]:
         return (self.x, self.y)
 
@@ -207,7 +207,6 @@ class Dijkstra(PathfindingBase):
                 path (List[Tuple[int, int]]): List of Tuples of coordinates of the shortest path from start to end
 
         '''
-
         self.init_unvisited()
 
         initial_node = self.grid[start[0]][start[1]]
